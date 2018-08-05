@@ -4,7 +4,10 @@ class Section extends React.Component {
   constructor(props) {
     super()
     this.state = {
-      fields: props.fields || []
+      fields:
+        props.fields.length === 0
+          ? [{ name: "Nome", primary: true }]
+          : props.fields
     }
   }
 
@@ -32,26 +35,40 @@ class Section extends React.Component {
         {(this.state.fields || []).map((field, i) => {
           return (
             <div className="field" style={{ marginTop: 15 }}>
-              <span contentEditable={isEditingForm} style={{ marginRight: 10 }}>
-                Nome do campo
+              <span
+                contentEditable={isEditingForm && !field.primary}
+                style={{ marginRight: 10 }}
+              >
+                {field.name || "Nome do campo"}
               </span>
 
               <span />
 
               <input
                 type="text"
-                style={{ marginRight: 10 }}
                 readOnly={this.props.isEditingForm}
+                style={{
+                  opacity: this.props.isEditingForm ? 0.8 : 1,
+                  background: this.props.isEditingForm
+                    ? "lightgray"
+                    : "initial",
+                  marginRight: 10
+                }}
               />
-              {isEditingForm && (
-                <button onClick={() => this.deleteField(i)}>delete</button>
-              )}
+              {isEditingForm &&
+                !field.primary && (
+                  <button onClick={() => this.deleteField(i)}>delete</button>
+                )}
             </div>
           )
         })}
       </div>
     )
   }
+}
+
+Section.defaultProps = {
+  fields: []
 }
 
 class Table extends React.Component {
@@ -75,11 +92,11 @@ class Table extends React.Component {
 
     return (
       <div className="table" style={style}>
-        {isEditingForm && (
-          <h2 contentEditable onBlur={() => console.log("oi")}>
-            Nova Tabela
+        {
+          <h2 contentEditable={isEditingForm} onBlur={() => console.log("oi")}>
+            {this.props.data.name || "Nova Tabela"}
           </h2>
-        )}
+        }
         <Section isEditingForm={isEditingForm} />
       </div>
     )
@@ -90,8 +107,8 @@ export default class Form extends React.Component {
   constructor(props) {
     super()
     this.state = {
-      tables: props.tables || [],
-      isEditingForm: false
+      tables: props.tables.length === 0 ? [{}] : props.tables,
+      isEditingForm: props.tables.length === 0
     }
   }
 
@@ -105,15 +122,17 @@ export default class Form extends React.Component {
 
   render() {
     const { isEditingForm } = this.state
+
     return (
       <div className="form">
         <div
           className="buttons"
           style={{ display: "flex", justifyContent: "space-between" }}
         >
-          {isEditingForm && (
-            <button onClick={this.insertTable}>Nova tabela</button>
-          )}
+          {isEditingForm &&
+            this.props.allowNewTables && (
+              <button onClick={this.insertTable}>Nova tabela</button>
+            )}
           <button onClick={this.toggleEdition}>
             {isEditingForm ? "Salvar formulário" : "Editar formulário"}
           </button>
@@ -125,10 +144,16 @@ export default class Form extends React.Component {
               data={data}
               key={`table-${i}`}
               isEditingForm={isEditingForm}
+              allowNewTables={this.props.allowNewTables}
             />
           )
         })}
       </div>
     )
   }
+}
+
+Form.defaultProps = {
+  allowNewTables: true,
+  tables: []
 }
